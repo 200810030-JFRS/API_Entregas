@@ -1,0 +1,32 @@
+digraph RapiEntrega {
+  graph [rankdir=LR, splines=ortho, bgcolor="white", pad="0.25", nodesep="0.42", ranksep="0.70", fontname="Arial", label="RapiEntrega — dominios SOA e interacciones principales", labelloc=t, fontsize=20];
+  node [shape=box, style="rounded,filled", fontname="Arial", fontsize=10, color="#2B4865", fillcolor="#EFF5FA", margin="0.13,0.09"];
+  edge [fontname="Arial", fontsize=9, color="#456B8A", arrowsize=0.75];
+
+  cliente [label="Cliente / App\nREST JSON + SSE", fillcolor="#FFF2CC", color="#B58B16"];
+  subgraph cluster_catalogo { label="Dominio 1 · Catálogo y restaurantes"; color="#88A9C8"; style="rounded"; restaurante [label="RestauranteController\nProductoController\nRestauranteService"] ; }
+  subgraph cluster_pedidos { label="Dominio 2 · Pedidos / orquestación"; color="#88A9C8"; style="rounded"; pedido [label="PedidoController\nPedidoService\nReglas y estados"] ; detalle [label="DetallePedidoController\nLineas de pedido"] ; }
+  subgraph cluster_pagos { label="Dominio 3 · Pagos"; color="#88A9C8"; style="rounded"; pago [label="PagoController\nPagoService\nPasarelaPagos (puerto)"] ; gateway [label="Proveedor externo\n(Pasarela simulada)", fillcolor="#FCE4D6", color="#BF6B36"] ; }
+  subgraph cluster_logistica { label="Dominio 4 · Logística y reparto"; color="#88A9C8"; style="rounded"; asigna [label="EntregaController\nAsignacionRepartidorService"] ; repartidor [label="RepartidorRepository\nDisponibilidad + ubicación"] ; }
+  subgraph cluster_tracking { label="Dominio 5 · Seguimiento / eventos"; color="#88A9C8"; style="rounded"; eventos [label="EventoPedidoService\nSpring Events (@Async)"] ; sse [label="SeguimientoService\nSSE /pedidos/{id}/eventos"] ; }
+  subgraph cluster_comunidad { label="Dominio 6 · Reputación y clientes"; color="#88A9C8"; style="rounded"; rating [label="ClienteController\nCalificacionController\nCalificacionService"] ; }
+  subgraph cluster_fact { label="Dominio 7 · Facturación"; color="#88A9C8"; style="rounded"; factura [label="FacturaController\nFacturaService\nLegacy Wrapper / Adapter"] ; legacy [label="Sistema de facturación\nheredado (2012)", fillcolor="#FCE4D6", color="#BF6B36"] ; }
+
+  cliente -> restaurante [label="GET catálogo / menú"];
+  cliente -> pedido [label="POST /pedidos; GET estado"];
+  pedido -> restaurante [label="consulta de menú/precio", style=dashed];
+  cliente -> pago [label="POST token de pago"];
+  pago -> gateway [label="request-response HTTPS*", color="#BF6B36"];
+  pedido -> asigna [label="pedido aceptado", style=dashed];
+  asigna -> repartidor [label="selección / ubicación"];
+  asigna -> eventos [label="estado y GPS", style=dashed];
+  pedido -> eventos [label="eventos de dominio", style=dashed];
+  eventos -> sse [label="pub/sub local asíncrono", color="#2B8A66"];
+  sse -> cliente [label="SSE: actualizaciones", color="#2B8A66"];
+  cliente -> rating [label="GET pedidos / POST rating"];
+  cliente -> factura [label="POST solicitud de factura"];
+  factura -> legacy [label="adaptador / contrato aislado", color="#BF6B36"];
+  pedido -> detalle [label="GET detalles", style=dashed];
+  note [shape=note, label="* En esta entrega el proveedor de pagos y el conector legado son simuladores.\nLas flechas dashed representan llamadas internas/eventos, no necesariamente otro proceso desplegado.", fontname="Arial", fontsize=9, fillcolor="#FFFDF5", color="#C6B98F"];
+  note -> legacy [style=invis];
+}

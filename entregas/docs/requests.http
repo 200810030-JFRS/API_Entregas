@@ -1,0 +1,73 @@
+### 1. Ver catálogo
+GET http://localhost:8080/api/v1/restaurantes
+
+### 2. Ver productos de La Trattoria Demo
+GET http://localhost:8080/api/v1/restaurantes/R001/productos
+
+### 3. Crear pedido (copiar id de la respuesta)
+POST http://localhost:8080/api/v1/pedidos
+Content-Type: application/json
+
+{
+  "clienteNombre": "Alex Demo",
+  "clienteCorreo": "alex@example.com",
+  "restauranteId": "R001",
+  "direccionEntrega": "Calle Demo 123",
+  "latitudEntrega": 19.43,
+  "longitudEntrega": -99.13,
+  "productos": [
+    { "productoId": "P001", "cantidad": 1 },
+    { "productoId": "P002", "cantidad": 1 }
+  ]
+}
+
+### 4. Pagar (reemplazar PED-... por el id creado)
+POST http://localhost:8080/api/v1/pedidos/PED-REEMPLAZAR/pago
+Content-Type: application/json
+
+{ "tokenPago": "tok_demo_aprobado" }
+
+### 5. Aceptar pedido (máximo 5 minutos después de la aprobación de pago)
+POST http://localhost:8080/api/v1/pedidos/PED-REEMPLAZAR/decision-restaurante
+Content-Type: application/json
+
+{ "aceptado": true, "motivo": "" }
+
+### Alternativa de rechazo del restaurante (probar con un pedido distinto)
+# POST http://localhost:8080/api/v1/pedidos/PED-REEMPLAZAR/decision-restaurante
+# Content-Type: application/json
+# { "aceptado": false, "motivo": "Cocina saturada" }
+
+### 6. Asignar repartidor disponible más cercano
+POST http://localhost:8080/api/v1/pedidos/PED-REEMPLAZAR/asignacion
+
+### 7. Suscribirse al seguimiento (abrir antes de publicar la ubicación)
+GET http://localhost:8080/api/v1/pedidos/PED-REEMPLAZAR/eventos
+Accept: text/event-stream
+
+### 8. Actualizar ubicación; usar repartidorId que viene en respuesta de asignación
+POST http://localhost:8080/api/v1/pedidos/PED-REEMPLAZAR/ubicacion
+Content-Type: application/json
+
+{ "repartidorId": "D001", "latitud": 19.431, "longitud": -99.132 }
+
+### 9. Confirmar entrega
+POST http://localhost:8080/api/v1/pedidos/PED-REEMPLAZAR/entrega
+Content-Type: application/json
+
+{ "repartidorId": "D001" }
+
+### 10. Calificar
+POST http://localhost:8080/api/v1/pedidos/PED-REEMPLAZAR/calificacion
+Content-Type: application/json
+
+{ "puntuacion": 5, "comentario": "Entrega puntual" }
+
+### 11. Facturar un pedido ya entregado
+POST http://localhost:8080/api/v1/facturas
+Content-Type: application/json
+
+{ "pedidoId": "PED-REEMPLAZAR", "rfc": "XAXX010101000", "razonSocial": "PUBLICO EN GENERAL", "correo": "alex@example.com" }
+
+### 12. Obtener pedido
+GET http://localhost:8080/api/v1/pedidos/PED-REEMPLAZAR

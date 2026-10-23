@@ -1,0 +1,27 @@
+digraph Flujo {
+  graph [rankdir=TB, bgcolor="white", pad="0.3", nodesep="0.35", ranksep="0.46", fontname="Arial", label="Proceso Pedido de comida — flujo principal y excepciones", labelloc=t, fontsize=19];
+  node [shape=box, style="rounded,filled", fontname="Arial", fontsize=10, color="#2B4865", fillcolor="#EFF5FA", margin="0.15,0.10"];
+  edge [fontname="Arial", fontsize=9, color="#456B8A", arrowsize=0.75];
+  start [label="Inicio: cliente consulta catálogo", shape=oval, fillcolor="#E2F0D9", color="#548235"];
+  create [label="POST /pedidos\nvalidar restaurante, productos y cantidades\ncalcular importes desde catálogo"];
+  pay [label="POST /pedidos/{id}/pago\nPasarela de pago externa (adaptador)"];
+  paid [label="¿Pago aprobado?", shape=diamond, fillcolor="#FFF2CC", color="#B58B16"];
+  payNo [label="Cancelar por pago rechazado\nestadoPago=RECHAZADO", fillcolor="#FCE4D6", color="#BF6B36"];
+  wait [label="PENDIENTE_ACEPTACION\ninicia ventana de 5 minutos"];
+  accept [label="¿Restaurante acepta antes de 5 min?", shape=diamond, fillcolor="#FFF2CC", color="#B58B16"];
+  refund [label="Cancelar + reembolsar\npor rechazo o tiempo agotado", fillcolor="#FCE4D6", color="#BF6B36"];
+  assign [label="Asignar repartidor disponible\nmás cercano al restaurante"];
+  track [label="Cliente se suscribe a SSE\nRepartidor publica coordenadas\nEventos de dominio actualizan estado", fillcolor="#DDEBF7"];
+  done [label="Confirmar entrega\nliberar repartidor"];
+  rate [label="Cliente califica (1–5)\nFactura opcional por adaptador legado"];
+  end [label="Fin", shape=oval, fillcolor="#E2F0D9", color="#548235"];
+  start -> create -> pay -> paid;
+  paid -> payNo [label="No"];
+  payNo -> end;
+  paid -> wait [label="Sí"];
+  wait -> accept;
+  accept -> refund [label="No / 5 min vencidos"];
+  refund -> end;
+  accept -> assign [label="Sí"];
+  assign -> track -> done -> rate -> end;
+}
